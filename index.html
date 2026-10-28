@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trennbare Verben</title>
+<style>
+:root{
+  --bg1:#F2F7FF; --bg2:#FFF7EC;
+  --ink:#16243D; --muted:#64748B;
+  --pre:#F97316; --pre-l:#FFEDD5; --pre-d:#C2410C;
+  --base:#2563EB; --base-l:#DBEAFE; --base-d:#1E40AF;
+  --sub:#E2E8F0; --sub-t:#334155;
+  --ok:#16A34A; --ok-l:#DCFCE7; --bad:#DC2626; --bad-l:#FEE2E2;
+  --mod:#7C3AED; --mod-l:#EDE9FE; --mod-d:#5B21B6; --teal:#0D9488;
+  --card:#FFFFFF; --line:#E5EAF3;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg1:#0F1A2E; --bg2:#1A1A2E; --ink:#EAF0FB; --muted:#9FB0C9;
+    --pre-l:#4A2A10; --pre-d:#FDBA74; --base-l:#17305F; --base-d:#93C5FD;
+    --sub:#26344D; --sub-t:#DCE6F5; --ok-l:#123D26; --bad-l:#4A1A1A;
+    --card:#17233B; --line:#2A3B5C;
+    --mod-l:#2E1D5C; --mod-d:#C4B5FD; --teal:#2DD4BF;
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:"Nunito","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  color:var(--ink);
+  background:linear-gradient(135deg,var(--bg1),var(--bg2));
+  background-attachment:fixed;
+  display:flex;flex-direction:column;min-height:100vh;
+}
+header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px clamp(14px,3vw,32px);gap:12px;
+}
+.brand{font-weight:800;font-size:1.05rem;letter-spacing:.3px;display:flex;align-items:center;gap:10px}
+.brand .dot{display:inline-flex;gap:3px}
+.brand .dot i{display:block;width:12px;height:12px;border-radius:4px}
+.brand .dot i:first-child{background:var(--pre)}
+.brand .dot i:last-child{background:var(--base)}
+.toggles{display:flex;gap:10px}
+.tg{
+  border:2px solid var(--line);background:var(--card);color:var(--ink);
+  border-radius:16px;padding:8px 12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;
+  font:inherit;font-size:.72rem;font-weight:700;min-width:84px;transition:.15s;
+}
+.tg svg{width:26px;height:26px}
+.tg[aria-pressed="true"]{border-color:var(--base);}
+.tg[aria-pressed="false"]{opacity:.55}
+.tg[aria-pressed="false"] .slash{display:block}
+.slash{display:none}
+.tg:hover{transform:translateY(-1px)}
+
+main{flex:1;position:relative;padding:0 clamp(14px,3vw,32px) 10px;display:flex;justify-content:center}
+.slide{
+  display:none;width:100%;max-width:1040px;
+  background:var(--card);border:1px solid var(--line);border-radius:28px;
+  box-shadow:0 18px 50px rgba(30,64,175,.10);
+  padding:clamp(20px,4vw,44px);
+}
+.slide.active{display:block;animation:inR .5s cubic-bezier(.2,.8,.2,1)}
+.slide.active.back{animation-name:inL}
+@keyframes inR{from{opacity:0;transform:translateX(40px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes inL{from{opacity:0;transform:translateX(-40px) scale(.98)}to{opacity:1;transform:none}}
+.bar{position:fixed;top:0;left:0;right:0;height:5px;background:transparent;z-index:50}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--pre),var(--base));border-radius:0 6px 6px 0;transition:width .5s cubic-bezier(.2,.8,.2,1)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+h1{font-size:clamp(2rem,6vw,3.6rem);line-height:1.1;font-weight:900}
+h2{font-size:clamp(1.5rem,3.6vw,2.2rem);font-weight:900;margin-bottom:6px}
+.sub{color:var(--muted);font-size:clamp(1rem,2vw,1.2rem);margin-bottom:22px}
+.center{text-align:center}
+
+.blk{display:inline-block;border-radius:16px;padding:.35em .7em;font-weight:900;font-size:clamp(1.3rem,3.6vw,2rem)}
+.blk.pre{background:var(--pre-l);color:var(--pre-d);border:3px solid var(--pre)}
+.blk.base{background:var(--base-l);color:var(--base-d);border:3px solid var(--base)}
+.blk.whole{background:var(--card);border:3px solid var(--line);padding:.35em .55em}
+.blk.whole b:first-child{color:var(--pre)}
+.blk.whole b:last-child{color:var(--base)}
+.op{font-size:clamp(1.4rem,3vw,2rem);font-weight:900;color:var(--muted);margin:0 6px}
+
+/* slide 1 */
+.hero{display:flex;flex-direction:column;align-items:center;gap:26px;padding:10px 0}
+.hero .eq-big{display:flex;align-items:center;flex-wrap:wrap;justify-content:center;gap:8px}
+.hero .eq-big .blk{font-size:clamp(2rem,7vw,4rem)}
+.hero .eq-big .op{font-size:clamp(2rem,6vw,3.4rem)}
+
+/* legend */
+.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;margin-bottom:22px}
+.lg{border-radius:20px;padding:16px 18px;border:3px solid}
+.lg.pre{background:var(--pre-l);border-color:var(--pre)}
+.lg.base{background:var(--base-l);border-color:var(--base)}
+.lg h3{font-size:1.3rem;margin-bottom:4px}
+.lg.pre h3{color:var(--pre-d)} .lg.base h3{color:var(--base-d)}
+.lg p{font-size:1.05rem}
+
+.eqs{display:flex;flex-direction:column;gap:12px}
+.eq{
+  display:flex;align-items:center;flex-wrap:wrap;justify-content:center;gap:4px;
+  background:transparent;border:2px dashed var(--line);border-radius:20px;padding:10px;cursor:pointer;font:inherit;color:var(--ink);
+  transition:.15s;
+}
+.eq:hover{border-color:var(--base);transform:translateY(-1px)}
+.eq.pulse{animation:pulse .4s}
+@keyframes pulse{50%{transform:scale(1.03);border-color:var(--pre)}}
+
+/* slide 3 grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px}
+.pc{
+  border:3px solid var(--pre);background:var(--pre-l);border-radius:22px;padding:16px 10px;cursor:pointer;text-align:center;
+  font:inherit;color:var(--ink);transition:.15s;
+}
+.pc:hover{transform:translateY(-3px) rotate(-.5deg)}
+.pc .p{font-size:2.2rem;font-weight:900;color:var(--pre-d)}
+.pc .m{margin-top:6px;font-size:1rem;color:var(--muted);font-weight:700}
+.pc .w{margin-top:4px;font-size:1.25rem;font-weight:800}
+.pc .w b:first-child{color:var(--pre)} .pc .w b:last-child{color:var(--base)}
+
+/* slide 4 */
+.vchips{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px}
+.vc{
+  border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:8px 16px;font:inherit;font-weight:800;font-size:1.05rem;cursor:pointer;transition:.15s
+}
+.vc.sel{background:var(--base);border-color:var(--base);color:#fff}
+.vc:hover{border-color:var(--base)}
+.stage{border-radius:22px;background:linear-gradient(180deg,var(--bg1),transparent);border:2px solid var(--line);padding:20px;min-height:250px}
+.step-label{font-size:.9rem;font-weight:800;color:var(--muted);letter-spacing:.8px;text-transform:uppercase;margin-bottom:8px}
+.inf-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.inf-row .blk{font-size:clamp(1.5rem,4vw,2.4rem)}
+.cut{font-size:1.8rem;transition:.4s}
+.btn{
+  border:none;border-radius:16px;padding:12px 22px;font:inherit;font-weight:900;font-size:1.05rem;cursor:pointer;color:#fff;background:var(--pre);box-shadow:0 5px 0 var(--pre-d);transition:.1s
+}
+.btn:active{transform:translateY(3px);box-shadow:0 2px 0 var(--pre-d)}
+.btn.blue{background:var(--base);box-shadow:0 5px 0 var(--base-d)}
+.btn.ghost{background:var(--card);color:var(--ink);box-shadow:0 4px 0 var(--line);border:2px solid var(--line)}
+.btn[disabled]{opacity:.4;cursor:default}
+.sentence{display:flex;flex-wrap:wrap;gap:10px 8px;align-items:flex-start;margin-top:22px;min-height:96px}
+.wc{display:flex;flex-direction:column;align-items:center;gap:6px;animation:pop .45s both}
+@keyframes pop{from{opacity:0;transform:translateY(16px) scale(.8)}to{opacity:1;transform:none}}
+.wc .chip{
+  border-radius:16px;padding:.35em .75em;font-weight:900;font-size:clamp(1.2rem,3.4vw,1.9rem);border:3px solid transparent
+}
+.chip.s,.chip.o{background:var(--sub);color:var(--sub-t);border-color:var(--sub)}
+.chip.v{background:var(--base-l);color:var(--base-d);border-color:var(--base)}
+.chip.p{background:var(--pre-l);color:var(--pre-d);border-color:var(--pre)}
+.wc .tag{font-size:.82rem;font-weight:900;letter-spacing:.4px;padding:3px 10px;border-radius:999px}
+.tag.v{background:var(--base);color:#fff} .tag.p{background:var(--pre);color:#fff}
+.punct{font-weight:900;font-size:clamp(1.4rem,3.6vw,2rem);align-self:flex-start;margin-left:-4px;padding-top:.28em}
+.hear{
+  margin-top:16px;display:inline-flex;align-items:center;gap:8px;border:2px solid var(--line);background:var(--card);color:var(--ink);
+  border-radius:14px;padding:8px 14px;font:inherit;font-weight:800;cursor:pointer
+}
+.hear svg{width:22px;height:22px}
+.placeholder{color:var(--muted);font-weight:700;border:2px dashed var(--line);border-radius:16px;padding:22px;width:100%;text-align:center}
+
+/* slide 5 summary */
+.pattern{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:16px 0 26px}
+.ex{border:2px solid var(--line);border-radius:20px;padding:16px 18px;margin-bottom:14px;cursor:pointer;transition:.15s}
+.ex:hover{border-color:var(--base)}
+.ex .sentence{margin-top:8px;min-height:0}
+.ex .step-label{margin-bottom:2px}
+.rule{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:6px}
+.rule div{border-radius:18px;padding:14px 18px;font-size:1.15rem;font-weight:700}
+.rule .a{background:var(--base-l);border:3px solid var(--base)}
+.rule .b{background:var(--pre-l);border:3px solid var(--pre)}
+
+
+.chip.m{background:var(--mod-l);color:var(--mod-d);border-color:var(--mod)}
+.chip.i{background:var(--card);border-color:var(--mod);display:flex}
+.chip.i b:first-child{color:var(--pre)} .chip.i b:last-child{color:var(--base)}
+.tag.m{background:var(--mod);color:#fff} .tag.i{background:var(--mod);color:#fff}
+.tcard{border:2px solid var(--line);border-radius:24px;padding:18px 20px;margin-bottom:16px;cursor:pointer;transition:.2s;background:var(--card)}
+.tcard:hover{border-color:var(--base);box-shadow:0 10px 26px rgba(37,99,235,.10);transform:translateY(-2px)}
+.thead{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.thead h3{font-size:clamp(1.2rem,3vw,1.6rem);font-weight:900;flex:1}
+.tb{width:40px;height:40px;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:1.25rem}
+.tb.t1{background:var(--base)} .tb.t2{background:var(--teal)} .tb.t3{background:var(--mod)}
+.nx{border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:6px 12px;font:inherit;font-weight:800;font-size:.9rem;cursor:pointer;transition:.15s}
+.nx:hover{border-color:var(--pre);color:var(--pre-d)}
+.trule{margin-top:10px;font-weight:800;font-size:1.02rem;color:var(--muted)}
+.trule b{color:var(--ink)}
+.tcard .sentence{margin-top:14px;min-height:92px}
+.seg{display:inline-flex;background:var(--bg1);border:2px solid var(--line);border-radius:999px;padding:4px;margin:6px 0 4px;position:relative}
+.seg button{border:none;background:transparent;font:inherit;font-weight:900;padding:9px 18px;border-radius:999px;cursor:pointer;color:var(--muted);position:relative;z-index:1;transition:color .25s}
+.seg button.on{color:#fff}
+.seg .pill{position:absolute;top:4px;bottom:4px;left:4px;border-radius:999px;background:var(--base);transition:left .35s cubic-bezier(.2,.8,.2,1),width .35s cubic-bezier(.2,.8,.2,1),background .3s}
+.note{margin-top:14px;border-radius:16px;padding:12px 16px;font-weight:800;font-size:1.08rem;border:3px solid var(--base);background:var(--base-l);transition:.3s}
+.note.m{border-color:var(--mod);background:var(--mod-l)}
+.sec{font-weight:900;font-size:.85rem;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin:20px 0 10px}
+
+.tcard.mod{border:3px solid var(--mod);background:var(--mod-l);padding:22px 24px;margin-bottom:20px}
+.tcard.mod:hover{border-color:var(--mod);box-shadow:0 10px 26px rgba(124,58,237,.18)}
+.tcard.mod h3{color:var(--mod-d)}
+.tcard.mod .sentence{min-height:110px;margin-top:18px}
+.tcard.mod .chip{font-size:clamp(1.5rem,4vw,2.3rem)}
+.tcard.mod .chip.s,.tcard.mod .chip.o{background:var(--card)}
+/* slide 7 practice */
+.target{
+  min-height:92px;border:3px dashed var(--line);border-radius:20px;padding:14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:14px 0;transition:.2s
+}
+.target.ok{border-color:var(--ok);background:var(--ok-l);border-style:solid}
+.target.bad{border-color:var(--bad);background:var(--bad-l);border-style:solid;animation:shake .4s}
+@keyframes shake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+.pool{display:flex;flex-wrap:wrap;gap:10px;min-height:64px}
+.tk{
+  border:3px solid var(--line);background:var(--card);color:var(--ink);border-radius:16px;padding:.35em .8em;font:inherit;font-weight:900;font-size:clamp(1.2rem,3.4vw,1.8rem);cursor:pointer;transition:.12s
+}
+.tk:hover{border-color:var(--base);transform:translateY(-2px)}
+.tk.in{background:var(--base-l);border-color:var(--base);color:var(--base-d)}
+.progress{display:flex;gap:8px;margin-bottom:6px}
+.progress i{width:34px;height:10px;border-radius:6px;background:var(--line)}
+.progress i.done{background:var(--ok)} .progress i.cur{background:var(--pre)}
+.msg{min-height:30px;font-weight:900;font-size:1.2rem;margin:4px 0 10px}
+.msg.ok{color:var(--ok)} .msg.bad{color:var(--bad)}
+.row-btns{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px}
+.star{font-size:4rem}
+
+/* nav */
+nav{
+  display:flex;align-items:center;justify-content:center;gap:18px;padding:14px;
+}
+.dots{display:flex;gap:8px}
+.dots button{width:14px;height:14px;border-radius:50%;border:none;background:var(--line);cursor:pointer;transition:.2s}
+.dots button.on{background:var(--pre);transform:scale(1.35)}
+.nb{
+  border:none;background:var(--base);color:#fff;font:inherit;font-weight:900;font-size:1.05rem;padding:12px 26px;border-radius:16px;cursor:pointer;box-shadow:0 5px 0 var(--base-d)
+}
+.nb:active{transform:translateY(3px);box-shadow:0 2px 0 var(--base-d)}
+.nb.prev{background:var(--card);color:var(--ink);box-shadow:0 5px 0 var(--line);border:2px solid var(--line)}
+.nb[disabled]{opacity:.35;cursor:default}
+@media (max-width:560px){ .tg{min-width:70px;padding:6px 8px} .brand span.t{display:none} }
+</style>
+</head>
+<body>
+
+<div class="bar"><i id="barFill"></i></div>
+<header>
+  <div class="brand"><span class="dot"><i></i><i></i></span><span class="t">Trennbare Verben</span></div>
+  <div class="toggles">
+    <button class="tg" id="tgVoice" aria-pressed="true" aria-label="Aussprache an oder aus" title="Aussprache an/aus">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor" stroke="none"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8.5 8.5 0 0 1 0 12"/><line class="slash" x1="3" y1="3" x2="21" y2="21" stroke="var(--bad)" stroke-width="2.6"/></svg>
+      <span>Aussprache</span>
+    </button>
+    <button class="tg" id="tgFx" aria-pressed="true" aria-label="Effekte an oder aus" title="Effekte an/aus">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V6l10-2v12" /><circle cx="6.5" cy="18" r="2.5" fill="currentColor"/><circle cx="16.5" cy="16" r="2.5" fill="currentColor"/><line class="slash" x1="3" y1="3" x2="21" y2="21" stroke="var(--bad)" stroke-width="2.6"/></svg>
+      <span>Effekte</span>
+    </button>
+  </div>
+</header>
+
+<main>
+  <!-- 1 -->
+  <section class="slide active">
+    <div class="hero center">
+      <h1>Trennbare Verben</h1>
+      <div class="eq-big">
+        <span class="blk pre">an</span><span class="op">+</span><span class="blk base">rufen</span><span class="op">=</span><span class="blk whole"><b>an</b><b>rufen</b></span>
+      </div>
+      <p class="sub" style="margin:0">Präfix + Basisverb</p>
+      <button class="btn" id="startBtn">Los geht’s!</button>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section class="slide">
+    <h2>Das Verb hat zwei Teile</h2>
+    <p class="sub">Tippe auf eine Zeile und höre das Verb.</p>
+    <div class="legend">
+      <div class="lg pre"><h3>Das Präfix</h3><p>Das kleine Wort <b>vor</b> dem Verb.</p></div>
+      <div class="lg base"><h3>Das Basisverb</h3><p>Das Verb <b>ohne</b> Präfix.</p></div>
+    </div>
+    <div class="eqs" id="eqs"></div>
+  </section>
+
+  <!-- 3 -->
+  <section class="slide">
+    <h2>Diese Präfixe sind trennbar</h2>
+    <p class="sub">Tippe auf eine Karte.</p>
+    <div class="grid" id="pgrid"></div>
+  </section>
+
+  <!-- 4 -->
+  <section class="slide">
+    <h2>Im Satz trennt sich das Verb</h2>
+    <p class="sub">Wähle ein Verb. Dann tippe auf „Trenne das Verb!“</p>
+    <div class="vchips" id="vchips"></div>
+    <div class="stage">
+      <div class="step-label">Infinitiv</div>
+      <div class="inf-row" id="infRow"></div>
+      <button class="btn" id="cutBtn">✂ Trenne das Verb!</button>
+      <div class="sentence" id="sent4"><div class="placeholder">Hier steht gleich der Satz.</div></div>
+      <button class="hear" id="hear4" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor" stroke="none"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8.5 8.5 0 0 1 0 12"/></svg>
+        Satz hören
+      </button>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section class="slide">
+    <h2>Zwei Satztypen</h2>
+    <p class="sub">Tippe auf einen Satz. Mit „Nächstes Beispiel“ siehst du mehr.</p>
+    <div class="tcard" data-card="A">
+      <div class="thead"><span class="tb t1">1</span><h3>Aussagesatz</h3><button class="nx" data-nx="A">Nächstes Beispiel ›</button></div>
+      <div class="sentence" id="exA"></div>
+      <div class="trule">Das Basisverb steht an <b>Position 2</b>. Das Präfix geht ans <b>Ende</b>.</div>
+    </div>
+    <div class="tcard" data-card="F">
+      <div class="thead"><span class="tb t2">2</span><h3>Ja-/Nein-Frage</h3><button class="nx" data-nx="F">Nächstes Beispiel ›</button></div>
+      <div class="sentence" id="exF"></div>
+      <div class="trule">Das Basisverb steht an <b>Position 1</b>. Das Präfix geht ans <b>Ende</b>.</div>
+    </div>
+  </section>
+
+  <!-- 6 -->
+  <section class="slide">
+    <h2>Mit Modalverb</h2>
+    <p class="sub" style="margin-bottom:18px">Tippe auf einen Satz.</p>
+    <div class="tcard mod" data-card="MA">
+      <div class="thead"><h3>Aussagesatz</h3><button class="nx" data-nx="MA">Nächstes Beispiel ›</button></div>
+      <div class="sentence" id="exMA"></div>
+    </div>
+    <div class="tcard mod" data-card="MF">
+      <div class="thead"><h3>Ja-/Nein-Frage</h3><button class="nx" data-nx="MF">Nächstes Beispiel ›</button></div>
+      <div class="sentence" id="exMF"></div>
+    </div>
+  </section>
+
+  <!-- 7 -->
+  <section class="slide" id="prac">
+    <h2>Bau den Satz</h2>
+    <div class="progress" id="prog"></div>
+    <p class="sub" id="hint" style="margin-bottom:6px"></p>
+    <div class="target" id="target"></div>
+    <div class="msg" id="msg"></div>
+    <div class="pool" id="pool"></div>
+    <div class="row-btns">
+      <button class="btn ghost" id="resetBtn">Nochmal</button>
+      <button class="btn blue" id="nextBtn" style="display:none">Weiter</button>
+    </div>
+  </section>
+</main>
+
+<nav>
+  <button class="nb prev" id="prev">Zurück</button>
+  <div class="dots" id="dots"></div>
+  <button class="nb" id="next">Weiter</button>
+</nav>
+
+<script>
+/* ---------- Sound ---------- */
+let voiceOn = true, fxOn = true;
+try{
+  voiceOn = localStorage.getItem('tv_voice') !== '0';
+  fxOn = localStorage.getItem('tv_fx') !== '0';
+}catch(e){}
+const tgV = document.getElementById('tgVoice'), tgF = document.getElementById('tgFx');
+function syncToggles(){
+  tgV.setAttribute('aria-pressed', voiceOn); tgF.setAttribute('aria-pressed', fxOn);
+}
+syncToggles();
+tgV.onclick = ()=>{ voiceOn=!voiceOn; if(!voiceOn && window.speechSynthesis) speechSynthesis.cancel(); try{localStorage.setItem('tv_voice',voiceOn?'1':'0')}catch(e){}; syncToggles(); if(voiceOn) say('Aussprache an'); };
+tgF.onclick = ()=>{ fxOn=!fxOn; try{localStorage.setItem('tv_fx',fxOn?'1':'0')}catch(e){}; syncToggles(); if(fxOn) fx('ok'); };
+
+function say(text){
+  if(!voiceOn || !('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'de-DE'; u.rate = 0.82;
+  const v = speechSynthesis.getVoices().find(v=>/^de/i.test(v.lang));
+  if(v) u.voice = v;
+  speechSynthesis.speak(u);
+}
+if('speechSynthesis' in window){ speechSynthesis.onvoiceschanged = ()=>{}; }
+
+let actx;
+function tone(f, t0, d, type='sine', vol=.18){
+  const o = actx.createOscillator(), g = actx.createGain();
+  o.type = type; o.frequency.value = f;
+  g.gain.setValueAtTime(0, actx.currentTime+t0);
+  g.gain.linearRampToValueAtTime(vol, actx.currentTime+t0+.02);
+  g.gain.exponentialRampToValueAtTime(.0001, actx.currentTime+t0+d);
+  o.connect(g); g.connect(actx.destination);
+  o.start(actx.currentTime+t0); o.stop(actx.currentTime+t0+d+.05);
+}
+function fx(kind){
+  if(!fxOn) return;
+  try{
+    actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+    if(actx.state==='suspended') actx.resume();
+    if(kind==='ok'){ tone(660,0,.14); tone(880,.12,.22); }
+    else if(kind==='bad'){ tone(220,0,.18,'sawtooth',.12); tone(165,.15,.28,'sawtooth',.12); }
+    else if(kind==='win'){ [523,659,784,1047].forEach((f,i)=>tone(f,i*.13,.3,'triangle',.2)); }
+    else if(kind==='tap'){ tone(520,0,.08,'sine',.1); }
+    else if(kind==='cut'){ tone(900,0,.05,'square',.07); tone(600,.06,.07,'square',.07); }
+  }catch(e){}
+}
+
+/* ---------- Navigation ---------- */
+const slides = [...document.querySelectorAll('.slide')];
+const dotsEl = document.getElementById('dots');
+let cur = 0;
+slides.forEach((_,i)=>{
+  const b = document.createElement('button'); b.setAttribute('aria-label','Seite '+(i+1));
+  b.onclick = ()=>go(i); dotsEl.appendChild(b);
+});
+function go(i){
+  const prevIdx = cur;
+  cur = Math.max(0, Math.min(slides.length-1, i));
+  slides.forEach((s,k)=>{ s.classList.toggle('active',k===cur); s.classList.toggle('back', cur<prevIdx); });
+  document.getElementById('barFill').style.width = ((cur+1)/slides.length*100)+'%';
+  [...dotsEl.children].forEach((d,k)=>d.classList.toggle('on',k===cur));
+  document.getElementById('prev').disabled = cur===0;
+  document.getElementById('next').disabled = cur===slides.length-1;
+  fx('tap'); window.scrollTo({top:0,behavior:'smooth'});
+}
+document.getElementById('prev').onclick = ()=>go(cur-1);
+document.getElementById('next').onclick = ()=>go(cur+1);
+document.getElementById('startBtn').onclick = ()=>{ go(1); };
+let tx=0, ty=0;
+document.addEventListener('touchstart', e=>{ tx=e.touches[0].clientX; ty=e.touches[0].clientY; }, {passive:true});
+document.addEventListener('touchend', e=>{
+  const dx=e.changedTouches[0].clientX-tx, dy=e.changedTouches[0].clientY-ty;
+  if(Math.abs(dx)>70 && Math.abs(dx)>Math.abs(dy)*1.6) go(dx<0?cur+1:cur-1);
+}, {passive:true});
+document.addEventListener('keydown', e=>{
+  if(e.key==='ArrowRight') go(cur+1);
+  if(e.key==='ArrowLeft') go(cur-1);
+});
+
+/* ---------- Data ---------- */
+const VERBS = [
+  {inf:'mitmachen',  pre:'mit',  base:'machen',  s:[['Ich','s'],['mache','v'],['mit','p','.']]},
+  {inf:'einladen',   pre:'ein',  base:'laden',   s:[['Wir','s'],['laden','v'],['Sofia','o'],['ein','p','.']]},
+  {inf:'anfangen',   pre:'an',   base:'fangen',  s:[['Der Tag','s'],['fängt','v'],['um 10 Uhr','o'],['an','p','.']]},
+  {inf:'abholen',    pre:'ab',   base:'holen',   s:[['Wir','s'],['holen','v'],['Sofia','o'],['ab','p','.']]},
+  {inf:'mitbringen', pre:'mit',  base:'bringen', s:[['Wir','s'],['bringen','v'],['Essen','o'],['mit','p','.']]},
+  {inf:'einsammeln', pre:'ein',  base:'sammeln', s:[['Wir','s'],['sammeln','v'],['10 €','o'],['ein','p','.']]},
+  {inf:'anrufen',    pre:'an',   base:'rufen',   s:[['Wir','s'],['rufen','v'],['morgens','o'],['an','p','.']]},
+  {inf:'mitkommen',  pre:'mit',  base:'kommen',  s:[['Ich','s'],['komme','v'],['heute','o'],['mit','p','.']]},
+];
+const PREFIXES = [
+  ['an','anrufen','rufen'],['ab','abholen','holen'],['auf','aufstehen','stehen'],['aus','aussteigen','steigen'],
+  ['ein','einladen','laden'],['mit','mitkommen','kommen'],['vor','vorlesen','lesen'],['zu','zumachen','machen'],
+  ['zurück','zurückkommen','kommen'],['weg','weggehen','gehen']
+];
+const EQS = [['mit','kommen'],['an','rufen'],['ein','laden'],['ab','holen']];
+
+/* ---------- Slide 2 ---------- */
+const eqs = document.getElementById('eqs');
+EQS.forEach(([p,b])=>{
+  const d = document.createElement('button'); d.className='eq';
+  d.innerHTML = `<span class="blk pre">${p}</span><span class="op">+</span><span class="blk base">${b}</span><span class="op">=</span><span class="blk whole"><b>${p}</b><b>${b}</b></span>`;
+  d.onclick = ()=>{ d.classList.remove('pulse'); void d.offsetWidth; d.classList.add('pulse'); fx('ok'); say(p+b); };
+  eqs.appendChild(d);
+});
+
+/* ---------- Slide 3 ---------- */
+const pgrid = document.getElementById('pgrid');
+PREFIXES.forEach(([p,v,b])=>{
+  const c = document.createElement('button'); c.className='pc';
+  c.innerHTML = `<div class="p">${p}</div><div class="m">${p} + ${b}</div><div class="w"><b>${p}</b><b>${b}</b></div>`;
+  c.onclick = ()=>{ fx('tap'); say(v); };
+  pgrid.appendChild(c);
+});
+
+/* ---------- Sentence renderer ---------- */
+function renderSentence(el, items, opts={}){
+  el.innerHTML = '';
+  items.forEach((it,i)=>{
+    const [t,r,x,k] = it;
+    const w = document.createElement('div'); w.className='wc';
+    if(k) w.dataset.k = k;
+    w.style.animationDelay = (opts.stagger? i*0.35 : 0)+'s';
+    if(opts.noanim) w.style.animation='none';
+    const chip = document.createElement('div'); chip.className='chip '+r;
+    if(r==='i'){ const [a,b]=t.split('|'); chip.innerHTML = `<b>${a}</b><b>${b}</b>`; }
+    else chip.textContent = t;
+    w.appendChild(chip);
+    if(opts.labels){
+      const tag = (cls,txt)=>{ const g=document.createElement('span'); g.className='tag '+cls; g.textContent=txt; w.appendChild(g); };
+      if(r==='v') tag('v', opts.q?'Position 1':'Position 2');
+      if(r==='m') tag('m', opts.q?'Position 1':'Position 2');
+      if(r==='p') tag('p','Ende');
+      if(r==='i') tag('i','Ende · zusammen');
+    }
+    el.appendChild(w);
+    if(x){ const p=document.createElement('span'); p.className='punct'; p.textContent=x; el.appendChild(p); }
+  });
+}
+const sentText = items => items.map(i=>i[0].replace('|','')+(i[2]||'')).join(' ');
+
+/* ---------- Slide 4 ---------- */
+const vchips = document.getElementById('vchips'), infRow = document.getElementById('infRow'),
+      sent4 = document.getElementById('sent4'), hear4 = document.getElementById('hear4');
+let selV = 1;
+function selectVerb(i){
+  selV = i;
+  [...vchips.children].forEach((c,k)=>c.classList.toggle('sel',k===i));
+  const v = VERBS[i];
+  infRow.innerHTML = `<span class="blk pre">${v.pre}</span><span class="blk base">${v.base}</span><span class="op">=</span><span class="blk whole"><b>${v.pre}</b><b>${v.base}</b></span>`;
+  sent4.innerHTML = '<div class="placeholder">Hier steht gleich der Satz.</div>';
+  hear4.style.display = 'none';
+  document.getElementById('cutBtn').disabled = false;
+  say(v.inf);
+}
+VERBS.forEach((v,i)=>{
+  const b = document.createElement('button'); b.className='vc'; b.textContent=v.inf; b.onclick=()=>{ fx('tap'); selectVerb(i); };
+  vchips.appendChild(b);
+});
+selV = 1; [...vchips.children][1].classList.add('sel');
+(function(){ const v=VERBS[1]; infRow.innerHTML = `<span class="blk pre">${v.pre}</span><span class="blk base">${v.base}</span><span class="op">=</span><span class="blk whole"><b>${v.pre}</b><b>${v.base}</b></span>`; })();
+document.getElementById('cutBtn').onclick = ()=>{
+  const v = VERBS[selV];
+  fx('cut');
+  renderSentence(sent4, v.s, {stagger:true, labels:true});
+  hear4.style.display = 'inline-flex';
+  setTimeout(()=>{ fx('ok'); say(sentText(v.s)); }, v.s.length*350+250);
+};
+hear4.onclick = ()=> say(sentText(VERBS[selV].s));
+
+/* ---------- Slide 5 + 6: Satztypen ---------- */
+const EX = {
+  A:[ [['Wir','s'],['laden','v'],['Sofia','o'],['ein','p','.']],
+      [['Der Tag','s'],['fängt','v'],['um 10 Uhr','o'],['an','p','.']],
+      [['Ich','s'],['rufe','v'],['morgens','o'],['an','p','.']] ],
+  F:[ [['Kommst','v'],['du','s'],['mit','p','?']],
+      [['Holst','v'],['du','s'],['Sofia','o'],['ab','p','?']],
+      [['Machst','v'],['du','s'],['heute','o'],['mit','p','?']] ],
+  MA:[ [['Ich','s'],['kann','m'],['heute','o'],['mit|kommen','i','.']],
+       [['Wir','s'],['müssen','m'],['Sofia','o'],['ab|holen','i','.']],
+       [['Wir','s'],['wollen','m'],['morgen','o'],['an|rufen','i','.']] ],
+  MF:[ [['Kannst','m'],['du','s'],['heute','o'],['mit|kommen','i','?']],
+       [['Müsst','m'],['ihr','s'],['Sofia','o'],['ein|laden','i','?']],
+       [['Willst','m'],['du','s'],['mit|machen','i','?']] ]
+};
+const idx = {A:0,F:0,MA:0,MF:0};
+function showEx(k, anim){
+  const items = EX[k][idx[k]];
+  renderSentence(document.getElementById('ex'+k), items, {labels:true, q:(k==='F'||k==='MF'), stagger:!!anim, noanim:!anim});
+  return items;
+}
+Object.keys(EX).forEach(k=>showEx(k,false));
+document.querySelectorAll('.nx').forEach(b=>b.onclick=e=>{
+  e.stopPropagation(); const k=b.dataset.nx;
+  idx[k]=(idx[k]+1)%EX[k].length; fx('ok');
+  const items=showEx(k,true);
+  setTimeout(()=>say(sentText(items)), items.length*350+150);
+});
+document.querySelectorAll('.tcard').forEach(c=>c.onclick=()=>{
+  fx('tap'); say(sentText(EX[c.dataset.card][idx[c.dataset.card]]));
+});
+
+/* ---------- Slide 7: Übung ---------- */
+const TASKS = [
+  {type:'Aussagesatz',                 hint:'abholen',    words:['Wir','holen','Sofia','ab'],             end:'.', bad:'Fast! Das Präfix geht ans Ende.'},
+  {type:'Aussagesatz',                 hint:'anrufen',    words:['Ich','rufe','dich','an'],               end:'.', bad:'Fast! Das Präfix geht ans Ende.'},
+  {type:'Ja-/Nein-Frage',              hint:'mitkommen',  words:['Kommst','du','heute','mit'],            end:'?', bad:'Fast! Die Frage beginnt mit dem Verb.'},
+  {type:'Ja-/Nein-Frage',              hint:'einladen',   words:['Lädst','du','Sofia','ein'],             end:'?', bad:'Fast! Die Frage beginnt mit dem Verb.'},
+  {type:'Aussagesatz mit Modalverb',   hint:'mitbringen', words:['Wir','müssen','Getränke','mitbringen'], end:'.', bad:'Fast! Mit Modalverb bleibt das Verb zusammen am Ende.'},
+  {type:'Aussagesatz mit Modalverb',   hint:'anfangen',   words:['Wir','wollen','um 10 Uhr','anfangen'],  end:'.', bad:'Fast! Mit Modalverb bleibt das Verb zusammen am Ende.'},
+  {type:'Frage mit Modalverb',         hint:'mitmachen',  words:['Willst','du','heute','mitmachen'],      end:'?', bad:'Fast! Das Modalverb steht an Position 1.'},
+];
+let ti = 0, built = [], pool = [], locked = false;
+const prog = document.getElementById('prog'), target = document.getElementById('target'),
+      poolEl = document.getElementById('pool'), msg = document.getElementById('msg'),
+      hint = document.getElementById('hint'), nextBtn = document.getElementById('nextBtn');
+function shuffle(a){ a=a.slice(); do{ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} }while(a.join('|')===TASKS[ti].words.join('|')); return a; }
+function drawProg(){
+  prog.innerHTML = TASKS.map((_,i)=>`<i class="${i<ti?'done':i===ti?'cur':''}"></i>`).join('');
+}
+function startTask(){
+  locked = false; built = []; pool = shuffle(TASKS[ti].words);
+  hint.textContent = TASKS[ti].type + ' · Verb: ' + TASKS[ti].hint;
+  msg.textContent=''; msg.className='msg'; target.className='target';
+  nextBtn.style.display='none'; document.getElementById('resetBtn').style.display='';
+  drawProg(); drawTask();
+}
+function drawTask(){
+  target.innerHTML=''; poolEl.innerHTML='';
+  built.forEach((w,i)=>{
+    const b=document.createElement('button'); b.className='tk in'; b.textContent=w;
+    b.onclick=()=>{ if(locked) return; pool.push(built.splice(i,1)[0]); fx('tap'); drawTask(); };
+    target.appendChild(b);
+  });
+  if(built.length===TASKS[ti].words.length){
+    const p=document.createElement('span'); p.className='punct'; p.textContent=TASKS[ti].end; target.appendChild(p);
+  }
+  pool.forEach((w,i)=>{
+    const b=document.createElement('button'); b.className='tk'; b.textContent=w;
+    b.onclick=()=>{ if(locked) return; built.push(pool.splice(i,1)[0]); fx('tap'); drawTask(); if(!pool.length) check(); };
+    poolEl.appendChild(b);
+  });
+}
+function check(){
+  const t = TASKS[ti];
+  const ok = built.join('|') === t.words.join('|');
+  locked = true;
+  if(ok){
+    target.className='target ok'; msg.className='msg ok'; msg.textContent='Richtig!';
+    fx('ok'); say(t.words.join(' ')+t.end);
+    ti++; drawProg();
+    if(ti>=TASKS.length){
+      setTimeout(()=>{ fx('win'); finish(); }, 1200);
+    } else { nextBtn.style.display=''; document.getElementById('resetBtn').style.display='none'; }
+  } else {
+    target.className='target bad'; msg.className='msg bad'; msg.textContent=t.bad;
+    fx('bad');
+    setTimeout(()=>{ if(locked && target.classList.contains('bad')){ startSame(); } }, 1800);
+  }
+}
+function startSame(){ const keep=ti; startTask(); }
+function finish(){
+  hint.textContent=''; poolEl.innerHTML=''; target.className='target'; 
+  target.innerHTML = '<div class="center" style="width:100%"><div class="star">🌟</div><h2>Super!</h2><p class="sub" style="margin:0">Du kennst jetzt trennbare Verben.</p></div>';
+  msg.textContent=''; document.getElementById('resetBtn').style.display='none';
+  nextBtn.textContent='Nochmal von vorn'; nextBtn.style.display=''; nextBtn.dataset.restart='1';
+  say('Super!');
+}
+nextBtn.onclick = ()=>{
+  if(nextBtn.dataset.restart){ delete nextBtn.dataset.restart; nextBtn.textContent='Weiter'; ti=0; startTask(); return; }
+  startTask();
+};
+document.getElementById('resetBtn').onclick = ()=>{ if(locked && target.classList.contains('ok')) return; startTask(); };
+startTask();
+
+go(0);
+</script>
+</body>
+</html>
